@@ -114,36 +114,40 @@
         AVertexPositionBuffer = gl.createBuffer()
         gl.bindBuffer(gl.ARRAY_BUFFER, AVertexPositionBuffer)
         var vertices = [
-        
+          2.5, 2.5, 2.5,
+          2.5, -2.5, 2.5,
+          2.5, -2.5, -2.5,
+          2.5, 2.5, -2.5,
+
+          -2.5, 2.5, -2.5,
+          -2.5, -2.5, -2.5,
+          -2.5, -2.5, 2.5,
+          -2.5, 2.5, 2.5,
+
+          2.5, 2.5, 2.5,
+          2.5, 2.5, -2.5,
+          -2.5, 2.5, -2.5,
+          -2.5, 2.5, 2.5,
+          -2.5, -2.5, 2.5,
+
+          2.5, -2.5, 2.5,
+          2.5, -2.5, -2.5,
+          -2.5, -2.5, -2.5,
+          -2.5, -2.5, 2.5
         ]
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
         AVertexPositionBuffer.itemSize = 3
-        AVertexPositionBuffer.numItems = 108
-        // A Color
-        AVertexColorBuffer = gl.createBuffer()
-        gl.bindBuffer(gl.ARRAY_BUFFER, AVertexColorBuffer)
-        var colors = [
-          
-        ]
-        var unpackedColors = [];
-        for (var i in colors) {
-          var color = colors[i];
-          for (var j=0; j < 4; j++) {
-            unpackedColors = unpackedColors.concat(color);
-          }
+        AVertexPositionBuffer.numItems = vertices.length / 3
+        // Square Color
+        AVertexColorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, AVertexColorBuffer);
+        var colors = [];
+        for (var i=0; i < AVertexPositionBuffer.numItems; i++) {
+            colors = colors.concat([0.494, 0.733, 0.839, 1.0]);
         }
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(unpackedColors), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
         AVertexColorBuffer.itemSize = 4;
-        AVertexColorBuffer.numItems = 108;
-
-        AVertexIndexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, AVertexIndexBuffer);
-        var AVertexIndices = [
-
-        ]
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(AVertexIndices), gl.STATIC_DRAW);
-        AVertexIndexBuffer.itemSize = 1;
-        AVertexIndexBuffer.numItems = 162;
+        AVertexColorBuffer.numItems = 4;
 
         // I Position
         IVertexPositionBuffer = gl.createBuffer()
@@ -267,7 +271,7 @@
           [0.843, 0.411, 0.521, 1.0],     // top right 1
           [0.843, 0.411, 0.521, 1.0],     // top left 1
           [0.960, 0.682, 0.690, 1.0],     // Front top face
-          [0.960, 0.682, 0.690, 1.0],     // Back top face
+          [0.960, 0.682, 0.690, 1.0]     // Back top face
         ];
         unpackedColors = [];
         for (i in colors) {
@@ -311,21 +315,20 @@
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
         mat4.perspective(pMatrix, glMatrix.toRadian(45), gl.viewportWidth / gl.viewportHeight, 0.1, 100.0)
         mat4.identity(mvMatrix)
-        mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, -25.0])
+        mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, -10.0])
         mvPushMatrix()
-        mat4.rotate(mvMatrix, mvMatrix, glMatrix.toRadian(rA), [0.0, 1.0, 0.0])
+        mat4.rotate(mvMatrix, mvMatrix, glMatrix.toRadian(rA), [0.0, 0.0, 0.0])
         //mat4.rotateY(mvMatrix, mvMatrix, glMatrix.toRadian(rA))
         gl.bindBuffer(gl.ARRAY_BUFFER, AVertexPositionBuffer)
         gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, AVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0)
         gl.bindBuffer(gl.ARRAY_BUFFER, AVertexColorBuffer)
         gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, AVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0)
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, AVertexIndexBuffer);
         setMatrixUniforms()
-        gl.drawElements(gl.TRIANGLES, AVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+        gl.drawArrays(gl.LINE_STRIP, 0, AVertexPositionBuffer.numItems);
         mvPopMatrix()
         mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, 0.0])
         mvPushMatrix()
-        mat4.rotate(mvMatrix, mvMatrix, glMatrix.toRadian(rI), [1.0, 1.0, 1.0])
+        mat4.rotate(mvMatrix, mvMatrix, glMatrix.toRadian(rI), [0.0, 1.0, 0.0])
         //mat4.rotateX(mvMatrix, mvMatrix, glMatrix.toRadian(rI))
         gl.bindBuffer(gl.ARRAY_BUFFER, IVertexPositionBuffer)
         gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, IVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0)
