@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>Tugas 1</title>
+    <title>Tugas 2</title>
     <meta http-equiv="content-type" content="text/html" charset="ISO-8859-1">
 
     <script type="text/javascript" src="gl-matrix-min.js"></script>
@@ -103,51 +103,64 @@
         gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix)
         gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix)
       }
-      var AVertexPositionBuffer
-      var AVertexColorBuffer
-      var AVertexIndexBuffer
+      var cubeVertexPositionBuffer
+      var cubeVertexColorBuffer
+      var cubeVertexIndexBuffer
+      var cubeVertex = []
       var IVertexPositionBuffer
       var IVertexColorBuffer
       var IVertexIndexBuffer
+      var IVertex = []
+
       function initBuffers() {
-        // A Position
-        AVertexPositionBuffer = gl.createBuffer()
-        gl.bindBuffer(gl.ARRAY_BUFFER, AVertexPositionBuffer)
+        // cube Position
+        cubeVertexPositionBuffer = gl.createBuffer()
+        gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer)
         var vertices = [
-          2.5, 2.5, 2.5,
-          2.5, -2.5, 2.5,
-          2.5, -2.5, -2.5,
-          2.5, 2.5, -2.5,
+          3.5, 3.5, 3.5,
+          3.5, -3.5, 3.5,
+          3.5, -3.5, -3.5,
+          3.5, 3.5, -3.5,
 
-          -2.5, 2.5, -2.5,
-          -2.5, -2.5, -2.5,
-          -2.5, -2.5, 2.5,
-          -2.5, 2.5, 2.5,
+          -3.5, 3.5, -3.5,
+          -3.5, -3.5, -3.5,
+          -3.5, -3.5, 3.5,
+          -3.5, 3.5, 3.5,
 
-          2.5, 2.5, 2.5,
-          2.5, 2.5, -2.5,
-          -2.5, 2.5, -2.5,
-          -2.5, 2.5, 2.5,
-          -2.5, -2.5, 2.5,
+          3.5, 3.5, 3.5,
+          3.5, 3.5, -3.5,
+          -3.5, 3.5, -3.5,
+          -3.5, 3.5, 3.5,
+          -3.5, -3.5, 3.5,
 
-          2.5, -2.5, 2.5,
-          2.5, -2.5, -2.5,
-          -2.5, -2.5, -2.5,
-          -2.5, -2.5, 2.5
+          3.5, -3.5, 3.5,
+          3.5, -3.5, -3.5,
+          -3.5, -3.5, -3.5,
+          -3.5, -3.5, 3.5
         ]
+
+        cubeVertex.push([-3.5, 3.5,  3.5, 1.0]) //A
+        cubeVertex.push([3.5,  3.5,  3.5, 1.0]) //B
+        cubeVertex.push([3.5,  -3.5, 3.5, 1.0]) //C
+        cubeVertex.push([-3.5, -3.5, 3.5, 1.0]) //D
+        cubeVertex.push([-3.5,  3.5, -3.5, 1.0]) //E
+        cubeVertex.push([3.5,   3.5, -3.5, 1.0]) //F
+        cubeVertex.push([-3.5, -3.5, -3.5, 1.0]) //G
+        cubeVertex.push([3.5,  -3.5, -3.5, 1.0]) //H
+
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
-        AVertexPositionBuffer.itemSize = 3
-        AVertexPositionBuffer.numItems = vertices.length / 3
-        // Square Color
-        AVertexColorBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, AVertexColorBuffer);
+        cubeVertexPositionBuffer.itemSize = 3
+        cubeVertexPositionBuffer.numItems = vertices.length / 3
+        // cube Color
+        cubeVertexColorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexColorBuffer);
         var colors = [];
-        for (var i=0; i < AVertexPositionBuffer.numItems; i++) {
+        for (var i=0; i < cubeVertexPositionBuffer.numItems; i++) {
             colors = colors.concat([0.494, 0.733, 0.839, 1.0]);
         }
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-        AVertexColorBuffer.itemSize = 4;
-        AVertexColorBuffer.numItems = 4;
+        cubeVertexColorBuffer.itemSize = 4;
+        cubeVertexColorBuffer.numItems = 4;
 
         // I Position
         IVertexPositionBuffer = gl.createBuffer()
@@ -249,6 +262,11 @@
           0.4, 1.0,  -0.3,
           -0.4, 1.0,  -0.3
         ]
+
+        for (var i = 0; i < vertices.length/3; i++) {
+          IVertex.push([vertices[i*3], vertices[i*3+1], vertices[i*3+2], 1.0])
+        }
+
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
         IVertexPositionBuffer.itemSize = 3
         IVertexPositionBuffer.numItems = vertices.length / 3
@@ -308,52 +326,148 @@
         IVertexIndexBuffer.itemSize = 1;
         IVertexIndexBuffer.numItems = IVertexIndices.length
       }
-      var rA = 0
+      var rcube = 0
       var rI = 0
+      var posX = 0
+      var posY = 0
+      var posZ = 0
+      var dirX = 1.0
+      var dirY = 1.0
+      var dirZ = 1.0
+      var IRotate = 1.0
+
       function drawScene() {
+        var ICurrent = []
+        var cubeCurrent = []
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
         mat4.perspective(pMatrix, glMatrix.toRadian(45), gl.viewportWidth / gl.viewportHeight, 0.1, 100.0)
         mat4.identity(mvMatrix)
-        mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, -10.0])
+        mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, -14.0])
         mvPushMatrix()
-        mat4.rotate(mvMatrix, mvMatrix, glMatrix.toRadian(rA), [0.0, 0.0, 0.0])
-        //mat4.rotateY(mvMatrix, mvMatrix, glMatrix.toRadian(rA))
-        gl.bindBuffer(gl.ARRAY_BUFFER, AVertexPositionBuffer)
-        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, AVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0)
-        gl.bindBuffer(gl.ARRAY_BUFFER, AVertexColorBuffer)
-        gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, AVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0)
+        mat4.rotate(mvMatrix, mvMatrix, glMatrix.toRadian(rcube), [0.0, 0.0, 0.0])
+        //mat4.rotateY(mvMatrix, mvMatrix, glMatrix.toRadian(rcube))
+        gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer)
+        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0)
+        gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexColorBuffer)
+        gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, cubeVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0)
+        for (var i = 0; i < cubeVertex.length; i++) {
+          var currentPosition = matrixMultiplication(mvMatrix, cubeVertex[i])
+          cubeCurrent.push(currentPosition)
+        }
         setMatrixUniforms()
-        gl.drawArrays(gl.LINE_STRIP, 0, AVertexPositionBuffer.numItems);
+        gl.drawArrays(gl.LINE_STRIP, 0, cubeVertexPositionBuffer.numItems)
         mvPopMatrix()
-        mat4.translate(mvMatrix, mvMatrix, [0.0, 0.0, 0.0])
+        mat4.translate(mvMatrix, mvMatrix, [0, 0, 0])
         mvPushMatrix()
+        mat4.translate(mvMatrix, mvMatrix, [posX, posY, posZ])
         mat4.rotate(mvMatrix, mvMatrix, glMatrix.toRadian(rI), [0.0, 1.0, 0.0])
         //mat4.rotateX(mvMatrix, mvMatrix, glMatrix.toRadian(rI))
         gl.bindBuffer(gl.ARRAY_BUFFER, IVertexPositionBuffer)
         gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, IVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0)
         gl.bindBuffer(gl.ARRAY_BUFFER, IVertexColorBuffer)
         gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, IVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0)
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, IVertexIndexBuffer);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, IVertexIndexBuffer)
+        for (var i = 0; i < IVertex.length; i++) {
+          currentPosition = matrixMultiplication(mvMatrix, IVertex[i])
+          ICurrent.push(currentPosition)
+        }
+        checkCollision(ICurrent, cubeCurrent)
         setMatrixUniforms()
         gl.drawElements(gl.TRIANGLES, IVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
         mvPopMatrix()
       }
+
+      function matrixMultiplication(mvMatrix, IVertex){
+        var xPos = mvMatrix[0]*IVertex[0] + mvMatrix[4]*IVertex[1] + mvMatrix[8]*IVertex[2] + mvMatrix[12]*IVertex[3]
+        var yPos = mvMatrix[1]*IVertex[0] + mvMatrix[5]*IVertex[1] + mvMatrix[9]*IVertex[2] + mvMatrix[13]*IVertex[3]
+        var zPos = mvMatrix[2]*IVertex[0] + mvMatrix[6]*IVertex[1] + mvMatrix[10]*IVertex[2] + mvMatrix[14]*IVertex[3]
+        var i = mvMatrix[3]*IVertex[0] + mvMatrix[7]*IVertex[1] + mvMatrix[11]*IVertex[2] + mvMatrix[15]*IVertex[3]
+        return[xPos, yPos, zPos, i]
+      }
+
       var lastTime = 0
       function animate() {
         var timeNow = new Date().getTime()
         if (lastTime != 0) {
           var elapsed = timeNow - lastTime
-          rA += (90 * elapsed) / 1000.0
-          rI += (75 * elapsed) / 1000.0
+          rcube += (90 * elapsed) / 1000.0
+          rI += ((100 * elapsed) / 1000.0)*IRotate
+          bouncing()
         }
         lastTime = timeNow
       }
+
+      function checkCollision(ICurrent, cubeCurrent){
+        for (var i = 0; i < ICurrent.length; i++) {
+          if (ICurrent[i][0] >= cubeCurrent[1][0]){
+            if (dirX > 0){
+              dirX = dirX*(-1.0)
+              IRotate = IRotate*(-1.0)
+              bouncing()
+            }
+            return
+          }
+
+          if (ICurrent[i][0] <= cubeCurrent[0][0]){
+            if (dirX < 0){
+              dirX = dirX*(-1.0)
+              IRotate = IRotate*(-1.0)
+              bouncing()
+            }
+            return
+          }
+
+          if (ICurrent[i][1] >= cubeCurrent[1][1]){
+            if (dirY > 0){
+              dirY = dirY*(-1.0)
+              IRotate = IRotate*(-1.0)
+              bouncing()
+            }
+            return
+          }
+
+          if (ICurrent[i][1] <= cubeCurrent[2][1]){
+            if (dirY < 0){
+              dirY = dirY*(-1.0)
+              IRotate = IRotate*(-1.0)
+              bouncing()
+            }
+            return
+          }
+
+          if (ICurrent[i][2] >= cubeCurrent[0][2]){
+            if (dirZ > 0){
+              dirZ = dirZ*(-1.0)
+              IRotate = IRotate*(-1.0)
+              bouncing()
+            }
+            return
+          }
+
+          if (ICurrent[i][2] <= cubeCurrent[4][2]){
+            if (dirZ < 0){
+              dirZ = dirZ*(-1.0)
+              IRotate = IRotate*(-1.0)
+              bouncing()
+            }
+            return
+          }
+        }
+      }
+
+      function bouncing() {
+        posX = posX + (0.03*dirX)
+        posY = posY + (0.03*dirY)
+        posZ = posZ + (0.03*dirZ)
+      }
+
       function tick() {
         requestAnimationFrame(tick)
         drawScene()
         animate()
       }
+
       function webGLStart() {
         var canvas = document.getElementById('mycanvas')
         initGL(canvas)
